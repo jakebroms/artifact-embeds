@@ -5,10 +5,10 @@
   "provider_url": "https://artifact-embeds.bromsey.work/",
   "title": "Cash Visibility & Forecasting",
   "author_name": "NeuGroup",
-  "html": "<iframe src=\"https://artifact-embeds.bromsey.work/cash-visibility-poll/\" width=\"1200\" height=\"650\" frameborder=\"0\" style=\"border:0;max-width:100%;\" loading=\"lazy\"></iframe>",
-  "width": 1200,
-  "height": 650,
-  "thumbnail_url": "https://artifact-embeds.bromsey.work/cash-visibility-poll/og.png",
+  "html": "<iframe src=\"https://artifact-embeds.bromsey.work/cash-visibility-poll/\" width=\"720\" height=\"720\" frameborder=\"0\" scrolling=\"no\" style=\"border:0;max-width:100%;display:block;\" loading=\"lazy\"></iframe>",
+  "width": 720,
+  "height": 720,
+  "thumbnail_url": "https://artifact-embeds.bromsey.work/cash-visibility-poll/og-stacked.png",
   "thumbnail_width": 1200,
   "thumbnail_height": 630
 }
