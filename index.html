@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artifact Embeds — Jake Broms</title>
+<meta name="description" content="A dashboard of embeddable HTML artifacts. Each branch in this repo is one artifact, ready to drop into Gradual, Notion, or anywhere iframely-aware.">
+<link rel="canonical" href="https://jakebroms.github.io/artifact-embeds/">
+
+<style>
+@font-face{font-family:'HW Cigars';src:url('https://ng-assets-neugroup.s3.us-east-2.amazonaws.com/HW+Cigars+Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Instrument Sans';src:url('https://ng-assets-neugroup.s3.us-east-2.amazonaws.com/InstrumentSans-VariableFont_wdth%2Cwght.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap;}
+
+:root{
+  --navy:#0B2A4A;
+  --chathams:#143D6B;
+  --regent:#A2C4E0;
+  --gold:#C9A45A;
+  --ink:#0B2A4A;
+  --mute:#5b6b7d;
+  --line:#dde6ef;
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --hd:'HW Cigars',Georgia,serif;
+  --bd:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--ink);}
+body{font-family:var(--bd);line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:.01em;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:34px 0 30px;}
+.wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+header h1{font-family:var(--hd);font-weight:400;font-size:30px;letter-spacing:.005em;margin-bottom:6px;}
+header p{color:#cfd9e6;font-size:14px;max-width:640px;line-height:1.55;}
+header .meta{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#a8b9cc;}
+header .meta a{color:#cfd9e6;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.18);padding-bottom:1px;}
+header .meta a:hover{color:#fff;border-color:#fff;}
+
+main{padding:28px 0 80px;}
+
+.controls{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.count{font-size:12.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.12em;font-weight:600;}
+.refresh{background:none;border:1px solid var(--line);color:var(--ink);font:inherit;font-size:12.5px;padding:7px 12px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.refresh:hover{background:#fff;border-color:#c2cfdc;}
+
+.list{display:flex;flex-direction:column;gap:12px;}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:18px 20px;
+  box-shadow:0 1px 2px rgba(11,42,74,.04);
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:18px;
+  align-items:start;
+  transition:border-color .15s,box-shadow .15s;
+}
+.card:hover{border-color:#c2cfdc;box-shadow:0 2px 6px rgba(11,42,74,.06);}
+
+.card-main{min-width:0;}
+.card h2{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px;line-height:1.3;}
+.card .desc{font-size:13px;color:var(--mute);line-height:1.55;margin-bottom:10px;}
+.card .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:11.5px;color:var(--mute);}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:#eef3f9;border:1px solid var(--line);border-radius:999px;color:var(--chathams);font-size:11px;font-weight:600;letter-spacing:.02em;}
+.tag.gold{background:#fbf5ea;border-color:#e9d9b6;color:#8a6a2a;}
+.date{font-variant-numeric:tabular-nums;}
+
+.actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:140px;}
+.btn{
+  font:inherit;font-size:12px;font-weight:600;
+  padding:7px 12px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--ink);
+  text-decoration:none;text-align:center;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .12s;
+}
+.btn:hover{border-color:var(--chathams);color:var(--chathams);}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+.btn.primary:hover{background:var(--chathams);border-color:var(--chathams);color:#fff;}
+.btn .copied{color:#1d7a4a;font-weight:600;}
+
+.empty,.error,.loading{
+  background:var(--card);border:1px dashed var(--line);border-radius:10px;
+  padding:32px 22px;text-align:center;color:var(--mute);font-size:13.5px;
+}
+.error{border-color:#e6b9b9;background:#fdf3f3;color:#8a2727;}
+.loading{color:var(--mute);}
+
+footer{font-size:11.5px;color:var(--mute);padding:24px 0 8px;border-top:1px solid var(--line);margin-top:36px;}
+footer code{background:#eef3f9;padding:2px 6px;border-radius:4px;font-size:11px;}
+
+@media (max-width:640px){
+  .card{grid-template-columns:1fr;}
+  .actions{flex-direction:row;flex-wrap:wrap;}
+  .actions .btn{flex:1;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Artifact Embeds</h1>
+    <p>A running list of embeddable HTML artifacts. Each branch in this repo is one artifact — drop the embed URL into Gradual, Notion, Coda, or anywhere iframely-aware.</p>
+    <div class="meta">
+      <a href="https://github.com/jakebroms/artifact-embeds" target="_blank" rel="noopener">View repo on GitHub</a>
+      <span>Newest at top</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="controls">
+      <div class="count" id="count">Loading…</div>
+      <button class="refresh" id="refresh" title="Refresh list">↻ Refresh</button>
+    </div>
+    <div id="list" class="list">
+      <div class="loading">Fetching artifacts from GitHub…</div>
+    </div>
+    <footer>
+      Convention: each artifact lives on its own branch with an <code>index.html</code> at the root. The dashboard reads <code>&lt;title&gt;</code> and <code>&lt;meta name="description"&gt;</code> from each branch's file. New pushes appear automatically.
+    </footer>
+  </div>
+</main>
+
+<script>
+const OWNER = 'jakebroms';
+const REPO = 'artifact-embeds';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const RAW = (branch) => `https://raw.githack.com/${OWNER}/${REPO}/${branch}/index.html`;
+const BRANCH_URL = (branch) => `https://github.com/${OWNER}/${REPO}/tree/${branch}`;
+
+const $list = document.getElementById('list');
+const $count = document.getElementById('count');
+const $refresh = document.getElementById('refresh');
+
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function relativeTime(iso){
+  if(!iso) return '';
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const s = Math.max(1, Math.round((now - then)/1000));
+  if(s < 60) return `${s}s ago`;
+  const m = Math.round(s/60); if(m < 60) return `${m} min ago`;
+  const h = Math.round(m/60); if(h < 24) return `${h}h ago`;
+  const d = Math.round(h/24); if(d < 14) return `${d}d ago`;
+  const w = Math.round(d/7); if(w < 9) return `${w}w ago`;
+  const mo = Math.round(d/30); if(mo < 18) return `${mo}mo ago`;
+  return `${Math.round(d/365)}y ago`;
+}
+
+async function getJSON(url){
+  const r = await fetch(url, {headers:{'Accept':'application/vnd.github+json'}});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText} — ${url}`);
+  return r.json();
+}
+
+async function fetchArtifactMeta(branch){
+  try{
+    const r = await fetch(RAW(branch), {cache:'no-store'});
+    if(!r.ok) return null;
+    const html = await r.text();
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
+    return {
+      title: titleMatch ? titleMatch[1].replace(/\s+/g,' ').trim() : branch,
+      desc: descMatch ? descMatch[1].trim() : ''
+    };
+  }catch(e){ return null; }
+}
+
+function cardHtml(a){
+  const embed = RAW(a.branch);
+  return `
+    <article class="card">
+      <div class="card-main">
+        <h2>${escapeHtml(a.title)}</h2>
+        ${a.desc ? `<p class="desc">${escapeHtml(a.desc)}</p>` : ''}
+        <div class="row">
+          <span class="tag">branch · ${escapeHtml(a.branch)}</span>
+          <span class="date">${relativeTime(a.date)}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="${embed}" target="_blank" rel="noopener">Open ↗</a>
+        <button class="btn" data-copy="${escapeHtml(embed)}">Copy embed URL</button>
+        <a class="btn" href="${BRANCH_URL(a.branch)}" target="_blank" rel="noopener">View source</a>
+      </div>
+    </article>`;
+}
+
+async function load(){
+  $list.innerHTML = '<div class="loading">Fetching artifacts from GitHub…</div>';
+  $count.textContent = 'Loading…';
+  try{
+    const branches = await getJSON(`${API}/branches?per_page=100`);
+    const candidates = branches.filter(b => b.name !== 'main' && b.name !== 'master' && b.name !== 'gh-pages');
+
+    if(candidates.length === 0){
+      $list.innerHTML = '<div class="empty">No artifact branches yet. Push a branch with an <code>index.html</code> at the root and refresh.</div>';
+      $count.textContent = '0 artifacts';
+      return;
+    }
+
+    const enriched = await Promise.all(candidates.map(async b => {
+      const [commit, meta] = await Promise.all([
+        getJSON(`${API}/commits/${b.commit.sha}`).catch(()=>null),
+        fetchArtifactMeta(b.name)
+      ]);
+      const date = commit?.commit?.committer?.date || commit?.commit?.author?.date || null;
+      return {
+        branch: b.name,
+        date,
+        title: meta?.title || b.name,
+        desc: meta?.desc || ''
+      };
+    }));
+
+    enriched.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    $list.innerHTML = enriched.map(cardHtml).join('');
+    $count.textContent = `${enriched.length} artifact${enriched.length===1?'':'s'}`;
+  }catch(e){
+    $list.innerHTML = `<div class="error">Couldn't load branches: ${escapeHtml(e.message)}. GitHub API may be rate-limiting (60 req/hr unauthenticated). Try again in a few minutes.</div>`;
+    $count.textContent = 'Error';
+  }
+}
+
+$list.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-copy]');
+  if(!btn) return;
+  const url = btn.getAttribute('data-copy');
+  try{
+    await navigator.clipboard.writeText(url);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="copied">✓ Copied</span>';
+    setTimeout(()=>{ btn.innerHTML = orig; }, 1400);
+  }catch(err){
+    btn.innerHTML = 'Copy failed';
+  }
+});
+
+$refresh.addEventListener('click', load);
+load();
+</script>
+</body>
+</html>
