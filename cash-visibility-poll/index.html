@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cash Visibility &amp; Forecasting</title>
-<link rel="alternate" type="application/json+oembed" href="https://artifact-embeds.bromsey.work/cash-visibility-poll/oembed.json" title="Cash Visibility &amp; Forecasting">
 <style>
 @font-face{font-family:'Instrument Sans';src:url('https://ng-assets-neugroup.s3.us-east-2.amazonaws.com/InstrumentSans-VariableFont_wdth%2Cwght.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap;}
 
@@ -139,6 +138,82 @@ body{
   .card-title{font-size:14.5px;}
   .callout{font-size:12px;}
 }
+
+/* ---- Context footer (fills iframe to ~900px in Gradual; editorial substance) ---- */
+.section-foot{
+  margin-top:22px;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+}
+.section-foot .lbl{
+  font-size:12.5px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--navy);
+  display:block;
+  margin-bottom:14px;
+}
+.foot-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:18px;
+  margin-bottom:18px;
+}
+.foot-cell .k{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--chathams);
+  margin-bottom:4px;
+}
+.foot-cell .v{
+  color:var(--ink);
+  font-size:13px;
+  font-weight:500;
+  line-height:1.4;
+}
+.foot-cta{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 18px;
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+  box-shadow:0 1px 2px rgba(11,42,74,.04);
+}
+.foot-cta .mark{
+  flex:0 0 36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--navy);
+  color:#fff;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.04em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.foot-cta .body .head{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:3px;
+  line-height:1.3;
+}
+.foot-cta .body .sub{
+  font-size:12px;
+  color:var(--mute);
+  line-height:1.5;
+}
+
+@media (max-width:640px){
+  .foot-grid{grid-template-columns:repeat(2, 1fr);gap:12px;}
+  .foot-cta{flex-direction:column;gap:8px;}
+}
 </style>
 </head>
 <body>
@@ -207,6 +282,35 @@ body{
     </div>
   </div>
 
+</div>
+
+<div class="section-foot">
+  <span class="lbl">About this poll</span>
+  <div class="foot-grid">
+    <div class="foot-cell">
+      <div class="k">Session</div>
+      <div class="v">H1 2026 working session</div>
+    </div>
+    <div class="foot-cell">
+      <div class="k">Format</div>
+      <div class="v">Anonymous live poll</div>
+    </div>
+    <div class="foot-cell">
+      <div class="k">Source</div>
+      <div class="v">NeuGroup peer-group membership</div>
+    </div>
+    <div class="foot-cell">
+      <div class="k">Recorded</div>
+      <div class="v">2026</div>
+    </div>
+  </div>
+  <div class="foot-cta">
+    <div class="mark">NG</div>
+    <div class="body">
+      <div class="head">Want to bring this question to your own peer group?</div>
+      <div class="sub">Send a note to NeuGroup membership and we'll schedule it for your next working session — or share peer benchmarks against your own treasury team.</div>
+    </div>
+  </div>
 </div>
 
 <script>
