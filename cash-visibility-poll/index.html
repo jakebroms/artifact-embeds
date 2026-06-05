@@ -209,24 +209,44 @@ body{
 </div>
 
 <script>
-/* iframe auto-resize: post our height to the parent so the host (Gradual/Notion/iframely)
-   can shrink the iframe to wrap our content. Sends on load, resize, and at intervals to
-   catch font-loading reflows. Hosts that don't listen ignore it harmlessly. */
+/* iframe auto-resize: post our content height to the host. Uses body.scrollHeight
+   (not documentElement bounds) so we measure CONTENT, not the iframe viewport.
+   Posts multiple message shapes so different listener protocols all pick it up. */
 (function(){
-  function postHeight(){
-    var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
-    var msg = { src: location.href, context: 'iframe.resize', height: h };
-    try { window.parent.postMessage(msg, '*'); } catch(e){}
-    try { window.parent.postMessage(JSON.stringify(msg), '*'); } catch(e){}
+  function getContentHeight(){
+    return Math.max(
+      document.body ? document.body.scrollHeight : 0,
+      document.body ? document.body.offsetHeight : 0
+    );
   }
-  window.addEventListener('load', postHeight);
+  var lastSent = 0;
+  function postHeight(){
+    var h = getContentHeight();
+    if (h <= 0 || h === lastSent) return;
+    lastSent = h;
+    var payloads = [
+      { src: location.href, context: 'iframe.resize', height: h },          // iframely protocol
+      JSON.stringify({ src: location.href, context: 'iframe.resize', height: h }),
+      { type: 'resize', height: h, src: location.href },                    // generic
+      'height:' + h                                                          // plain-text fallback
+    ];
+    payloads.forEach(function(p){
+      try { window.parent.postMessage(p, '*'); } catch(e){}
+    });
+    // Debug breadcrumb — visible in DevTools console when inspecting the iframe
+    try { console.log('[artifact-embed] postHeight ->', h); } catch(e){}
+  }
+  window.addEventListener('load', function(){ lastSent = 0; postHeight(); });
   window.addEventListener('resize', postHeight);
   if (window.ResizeObserver){
-    new ResizeObserver(postHeight).observe(document.documentElement);
+    new ResizeObserver(postHeight).observe(document.body);
   } else {
     setInterval(postHeight, 1000);
   }
+  // Fire once now in case load already happened, and again shortly after to catch font-load reflows
   postHeight();
+  setTimeout(postHeight, 200);
+  setTimeout(postHeight, 1000);
 })();
 </script>
 
