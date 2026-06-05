@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "type": "rich",
+  "provider_name": "NeuGroup",
+  "provider_url": "https://artifact-embeds.bromsey.work/",
+  "title": "Cash Visibility & Forecasting",
+  "author_name": "NeuGroup",
+  "html": "<iframe src=\"https://artifact-embeds.bromsey.work/cash-visibility-poll/\" width=\"1200\" height=\"650\" frameborder=\"0\" style=\"border:0;max-width:100%;\" loading=\"lazy\"></iframe>",
+  "width": 1200,
+  "height": 650,
+  "thumbnail_url": "https://artifact-embeds.bromsey.work/cash-visibility-poll/og.png",
+  "thumbnail_width": 1200,
+  "thumbnail_height": 630
+}
