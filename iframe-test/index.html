@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iframe Embed Debugger</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:#f4f7fb;color:#0B2A4A;line-height:1.5;padding:24px;
+}
+.wrap{max-width:1100px;margin:0 auto;}
+h1{font-size:20px;margin-bottom:4px;}
+.sub{color:#5b6b7d;font-size:13px;margin-bottom:18px;}
+.bar{display:flex;gap:8px;margin-bottom:14px;}
+input[type=url]{flex:1;font:inherit;padding:9px 12px;border:1px solid #dde6ef;border-radius:6px;background:#fff;}
+input[type=url]:focus{outline:none;border-color:#143D6B;}
+button{font:inherit;font-weight:600;padding:9px 16px;border-radius:6px;border:1px solid #0B2A4A;background:#0B2A4A;color:#fff;cursor:pointer;}
+button:hover{background:#143D6B;}
+button.ghost{background:#fff;color:#0B2A4A;}
+button.ghost:hover{background:#eef3f9;}
+.modes{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.mode{font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid #dde6ef;background:#fff;color:#5b6b7d;cursor:pointer;}
+.mode.on{background:#0B2A4A;color:#fff;border-color:#0B2A4A;}
+.layout{display:grid;grid-template-columns:1fr 380px;gap:14px;}
+.panel{background:#fff;border:1px solid #dde6ef;border-radius:10px;padding:14px;}
+.panel h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5b6b7d;margin-bottom:10px;}
+.iframewrap{background:#fff;border:1px dashed #c2cfdc;border-radius:10px;padding:10px;overflow:hidden;}
+.iframewrap iframe{display:block;border:0;width:100%;background:#fff;}
+.stats{display:flex;flex-direction:column;gap:6px;font-size:12px;}
+.stats .k{color:#5b6b7d;font-weight:600;}
+.stats .v{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#0B2A4A;font-weight:600;}
+.stats .row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;}
+.log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:1.5;background:#0B2A4A;color:#e8f0fb;padding:10px;border-radius:6px;max-height:380px;overflow:auto;}
+.log .entry{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.log .t{color:#a8b9cc;}
+.log .h{color:#F2C94C;font-weight:600;}
+.log .empty{color:#a8b9cc;font-style:italic;}
+.hint{font-size:11.5px;color:#5b6b7d;margin-top:10px;line-height:1.5;}
+.hint code{background:#eef3f9;padding:1px 5px;border-radius:3px;font-size:11px;}
+@media (max-width:780px){.layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Iframe Embed Debugger</h1>
+  <p class="sub">Paste an artifact URL → see what postMessage events it fires, what dimensions it asks for, and how it behaves with vs. without an auto-resizing parent.</p>
+
+  <form class="bar" id="form">
+    <input id="url" type="url" placeholder="https://artifact-embeds.bromsey.work/cash-visibility-poll/" required>
+    <button type="submit">Load</button>
+    <button class="ghost" type="button" id="clear">Clear log</button>
+  </form>
+
+  <div class="modes">
+    <span style="font-size:12px;color:#5b6b7d;font-weight:600;align-self:center;margin-right:4px;">Parent behavior:</span>
+    <button class="mode on" data-mode="listen" type="button">Listen + auto-resize</button>
+    <button class="mode" data-mode="fixed" type="button">Fixed 900px (like Gradual?)</button>
+    <button class="mode" data-mode="fixed-650" type="button">Fixed 650px</button>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="iframewrap">
+        <iframe id="frame" src="" height="600"></iframe>
+      </div>
+      <p class="hint">The iframe above behaves based on your selected parent mode. <b>Listen mode</b> auto-resizes when the iframe posts a height (the desired behavior). <b>Fixed mode</b> ignores postMessage and forces a height (simulating a host that hard-codes iframe size).</p>
+    </div>
+
+    <div>
+      <div class="panel" style="margin-bottom:10px;">
+        <h2>Iframe state</h2>
+        <div class="stats">
+          <div class="row"><span class="k">Parent mode:</span><span class="v" id="s-mode">listen</span></div>
+          <div class="row"><span class="k">Iframe width:</span><span class="v" id="s-w">—</span></div>
+          <div class="row"><span class="k">Iframe height:</span><span class="v" id="s-h">—</span></div>
+          <div class="row"><span class="k">Last posted height:</span><span class="v" id="s-lh">—</span></div>
+          <div class="row"><span class="k">Messages received:</span><span class="v" id="s-n">0</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>postMessage log</h2>
+        <div class="log" id="log"><div class="entry empty">Load a URL to start capturing messages.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const frame = $('frame'), log = $('log'), urlIn = $('url');
+let mode = 'listen';
+let msgCount = 0, lastHeight = null;
+
+function setMode(m){
+  mode = m;
+  document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  $('s-mode').textContent = m;
+  if (m === 'fixed') frame.height = 900;
+  if (m === 'fixed-650') frame.height = 650;
+  if (m === 'listen' && lastHeight) frame.height = lastHeight;
+  updateStats();
+}
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+function updateStats(){
+  const r = frame.getBoundingClientRect();
+  $('s-w').textContent = Math.round(r.width) + 'px';
+  $('s-h').textContent = Math.round(r.height) + 'px';
+}
+new ResizeObserver(updateStats).observe(frame);
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function ts(){ const d = new Date(); return d.toTimeString().slice(0,8) + '.' + String(d.getMilliseconds()).padStart(3,'0'); }
+
+function addLog(label, data){
+  if (msgCount === 0) log.innerHTML = '';
+  msgCount++; $('s-n').textContent = msgCount;
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  let body;
+  if (typeof data === 'string') body = data;
+  else { try { body = JSON.stringify(data); } catch(e){ body = String(data); } }
+  entry.innerHTML = `<span class="t">${ts()}</span> <span class="h">${escapeHtml(label)}</span> ${escapeHtml(body)}`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+window.addEventListener('message', (e) => {
+  // Only log messages from our loaded iframe origin if possible
+  if (frame.src && e.source !== frame.contentWindow) return;
+  let parsed = e.data;
+  if (typeof parsed === 'string'){
+    try { parsed = JSON.parse(parsed); addLog('msg (parsed JSON)', parsed); }
+    catch(_) { addLog('msg (string)', parsed); }
+  } else {
+    addLog('msg (object)', parsed);
+  }
+  // Extract a height value from common shapes
+  const obj = (typeof parsed === 'object' && parsed) ? parsed : {};
+  const h = obj.height ?? obj.h ?? (typeof e.data === 'string' && e.data.startsWith('height:') ? parseInt(e.data.slice(7),10) : null);
+  if (typeof h === 'number' && h > 0 && h < 5000){
+    lastHeight = h;
+    $('s-lh').textContent = h + 'px';
+    if (mode === 'listen'){
+      frame.height = h;
+      addLog('action', 'resized iframe to ' + h + 'px');
+    } else {
+      addLog('action', 'IGNORED (mode=' + mode + ') — iframe stays at ' + frame.height + 'px');
+    }
+  }
+  updateStats();
+});
+
+$('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  msgCount = 0; lastHeight = null;
+  log.innerHTML = '<div class="entry empty">Loading…</div>';
+  $('s-lh').textContent = '—';
+  $('s-n').textContent = '0';
+  if (mode === 'listen') frame.height = 600;
+  frame.src = urlIn.value;
+  updateStats();
+});
+$('clear').addEventListener('click', () => {
+  log.innerHTML = '<div class="entry empty">Log cleared. Reload the URL to capture fresh messages.</div>';
+  msgCount = 0; $('s-n').textContent = '0';
+});
+
+// Default URL for convenience
+urlIn.value = 'https://artifact-embeds.bromsey.work/cash-visibility-poll/';
+updateStats();
+</script>
+
+<script>
+/* iframe auto-resize: same script the gradual-embed skill injects into artifacts.
+   Included here so the debugger itself can be embedded recursively if needed. */
+(function(){
+  function getContentHeight(){
+    return Math.max(document.body ? document.body.scrollHeight : 0, document.body ? document.body.offsetHeight : 0);
+  }
+  var lastSent = 0;
+  function postHeight(){
+    var h = getContentHeight(); if (h <= 0 || h === lastSent) return; lastSent = h;
+    try { window.parent.postMessage({ src: location.href, context: 'iframe.resize', height: h }, '*'); } catch(e){}
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  if (window.ResizeObserver) new ResizeObserver(postHeight).observe(document.body);
+  postHeight(); setTimeout(postHeight, 200);
+})();
+</script>
+</body>
+</html>
