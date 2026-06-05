@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artifact Embeds — Jake Broms</title>
-<meta name="description" content="A dashboard of embeddable HTML artifacts. Each branch in this repo is one artifact, ready to drop into Gradual, Notion, or anywhere iframely-aware.">
-<link rel="canonical" href="https://jakebroms.github.io/artifact-embeds/">
+<meta name="description" content="A dashboard of embeddable HTML artifacts. Each folder in this repo is one artifact, served directly at /[name]/, ready to drop into Gradual, Notion, or anywhere iframely-aware.">
+<link rel="canonical" href="https://artifact-embeds.bromsey.work/">
 
 <style>
 @font-face{font-family:'HW Cigars';src:url('https://ng-assets-neugroup.s3.us-east-2.amazonaws.com/HW+Cigars+Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
@@ -65,7 +65,6 @@ main{padding:28px 0 80px;}
 .card .desc{font-size:13px;color:var(--mute);line-height:1.55;margin-bottom:10px;}
 .card .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:11.5px;color:var(--mute);}
 .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:#eef3f9;border:1px solid var(--line);border-radius:999px;color:var(--chathams);font-size:11px;font-weight:600;letter-spacing:.02em;}
-.tag.gold{background:#fbf5ea;border-color:#e9d9b6;color:#8a6a2a;}
 .date{font-variant-numeric:tabular-nums;}
 
 .actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:140px;}
@@ -104,7 +103,7 @@ footer code{background:#eef3f9;padding:2px 6px;border-radius:4px;font-size:11px;
 <header>
   <div class="wrap">
     <h1>Artifact Embeds</h1>
-    <p>A running list of embeddable HTML artifacts. Each branch in this repo is one artifact — drop the embed URL into Gradual, Notion, Coda, or anywhere iframely-aware.</p>
+    <p>A running list of embeddable HTML artifacts. Each folder in this repo is one artifact, served at <code style="background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px;font-size:13px;color:#e8f0fb;">/[name]/</code> — drop the link into Gradual, Notion, Coda, or anywhere iframely-aware.</p>
     <div class="meta">
       <a href="https://github.com/jakebroms/artifact-embeds" target="_blank" rel="noopener">View repo on GitHub</a>
       <span>Newest at top</span>
@@ -122,17 +121,18 @@ footer code{background:#eef3f9;padding:2px 6px;border-radius:4px;font-size:11px;
       <div class="loading">Fetching artifacts from GitHub…</div>
     </div>
     <footer>
-      Convention: each artifact lives on its own branch with an <code>index.html</code> at the root. The dashboard reads <code>&lt;title&gt;</code> and <code>&lt;meta name="description"&gt;</code> from each branch's file. New pushes appear automatically.
+      Convention: each artifact is a folder at the repo root with an <code>index.html</code> inside. The dashboard reads <code>&lt;title&gt;</code> and <code>&lt;meta name="description"&gt;</code> from each folder's index. Push a new folder to <code>main</code> and it shows up at the top.
     </footer>
   </div>
 </main>
 
 <script>
 const OWNER = 'jakebroms';
-const REPO = 'artifact-embeds';
-const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
-const RAW = (branch) => `https://raw.githack.com/${OWNER}/${REPO}/${branch}/index.html`;
-const BRANCH_URL = (branch) => `https://github.com/${OWNER}/${REPO}/tree/${branch}`;
+const REPO  = 'artifact-embeds';
+const API   = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const SITE  = location.origin;
+const folderUrl = (name) => `${SITE}/${name}/`;
+const sourceUrl = (name) => `https://github.com/${OWNER}/${REPO}/tree/main/${name}`;
 
 const $list = document.getElementById('list');
 const $count = document.getElementById('count');
@@ -156,40 +156,40 @@ function relativeTime(iso){
 
 async function getJSON(url){
   const r = await fetch(url, {headers:{'Accept':'application/vnd.github+json'}});
-  if(!r.ok) throw new Error(`${r.status} ${r.statusText} — ${url}`);
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
   return r.json();
 }
 
-async function fetchArtifactMeta(branch){
+async function fetchMeta(name){
   try{
-    const r = await fetch(RAW(branch), {cache:'no-store'});
+    const r = await fetch(`/${name}/`, {cache:'no-store'});
     if(!r.ok) return null;
     const html = await r.text();
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
+    const descMatch  = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
     return {
-      title: titleMatch ? titleMatch[1].replace(/\s+/g,' ').trim() : branch,
-      desc: descMatch ? descMatch[1].trim() : ''
+      title: titleMatch ? titleMatch[1].replace(/\s+/g,' ').trim() : name,
+      desc:  descMatch ? descMatch[1].trim() : ''
     };
   }catch(e){ return null; }
 }
 
 function cardHtml(a){
-  const embed = RAW(a.branch);
+  const open = folderUrl(a.name);
   return `
     <article class="card">
       <div class="card-main">
         <h2>${escapeHtml(a.title)}</h2>
         ${a.desc ? `<p class="desc">${escapeHtml(a.desc)}</p>` : ''}
         <div class="row">
-          <span class="tag">branch · ${escapeHtml(a.branch)}</span>
+          <span class="tag">/${escapeHtml(a.name)}/</span>
           <span class="date">${relativeTime(a.date)}</span>
         </div>
       </div>
       <div class="actions">
-        <a class="btn primary" href="${embed}" target="_blank" rel="noopener">Open ↗</a>
-        <button class="btn" data-copy="${escapeHtml(embed)}">Copy embed URL</button>
-        <a class="btn" href="${BRANCH_URL(a.branch)}" target="_blank" rel="noopener">View source</a>
+        <a class="btn primary" href="${open}" target="_blank" rel="noopener">Open ↗</a>
+        <button class="btn" data-copy="${escapeHtml(open)}">Copy embed URL</button>
+        <a class="btn" href="${sourceUrl(a.name)}" target="_blank" rel="noopener">View source</a>
       </div>
     </article>`;
 }
@@ -198,26 +198,26 @@ async function load(){
   $list.innerHTML = '<div class="loading">Fetching artifacts from GitHub…</div>';
   $count.textContent = 'Loading…';
   try{
-    const branches = await getJSON(`${API}/branches?per_page=100`);
-    const candidates = branches.filter(b => b.name !== 'main' && b.name !== 'master' && b.name !== 'gh-pages');
+    const contents = await getJSON(`${API}/contents/`);
+    const folders = contents.filter(i => i.type === 'dir' && !i.name.startsWith('.'));
 
-    if(candidates.length === 0){
-      $list.innerHTML = '<div class="empty">No artifact branches yet. Push a branch with an <code>index.html</code> at the root and refresh.</div>';
+    if(folders.length === 0){
+      $list.innerHTML = '<div class="empty">No artifacts yet. Push a folder with an <code>index.html</code> at the root of <code>main</code> and refresh.</div>';
       $count.textContent = '0 artifacts';
       return;
     }
 
-    const enriched = await Promise.all(candidates.map(async b => {
-      const [commit, meta] = await Promise.all([
-        getJSON(`${API}/commits/${b.commit.sha}`).catch(()=>null),
-        fetchArtifactMeta(b.name)
+    const enriched = await Promise.all(folders.map(async f => {
+      const [commits, meta] = await Promise.all([
+        getJSON(`${API}/commits?path=${encodeURIComponent(f.name)}&per_page=1`).catch(()=>[]),
+        fetchMeta(f.name)
       ]);
-      const date = commit?.commit?.committer?.date || commit?.commit?.author?.date || null;
+      const date = commits[0]?.commit?.committer?.date || commits[0]?.commit?.author?.date || null;
       return {
-        branch: b.name,
+        name: f.name,
         date,
-        title: meta?.title || b.name,
-        desc: meta?.desc || ''
+        title: meta?.title || f.name,
+        desc:  meta?.desc  || ''
       };
     }));
 
@@ -225,7 +225,7 @@ async function load(){
     $list.innerHTML = enriched.map(cardHtml).join('');
     $count.textContent = `${enriched.length} artifact${enriched.length===1?'':'s'}`;
   }catch(e){
-    $list.innerHTML = `<div class="error">Couldn't load branches: ${escapeHtml(e.message)}. GitHub API may be rate-limiting (60 req/hr unauthenticated). Try again in a few minutes.</div>`;
+    $list.innerHTML = `<div class="error">Couldn't load artifacts: ${escapeHtml(e.message)}. GitHub API may be rate-limiting (60 req/hr unauthenticated). Try again in a few minutes.</div>`;
     $count.textContent = 'Error';
   }
 }
