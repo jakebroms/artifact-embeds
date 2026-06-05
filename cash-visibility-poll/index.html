@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cash Visibility &amp; Forecasting — Poll Results</title>
+<meta property="og:title" content="Cash Visibility & Forecasting — Poll Results">
+<meta property="og:description" content="65% claim real-time visibility, yet 69% cite poor data quality as their #1 forecasting barrier.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+@font-face{font-family:'Instrument Sans';src:url('https://ng-assets-neugroup.s3.us-east-2.amazonaws.com/InstrumentSans-VariableFont_wdth%2Cwght.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap;}
+
+:root{
+  --navy:#0B2A4A;
+  --chathams:#143D6B;
+  --regent:#A2C4E0;
+  --gold:#C9A45A;
+  --gold-soft:#E5CFA3;
+  --ink:#0B2A4A;
+  --mute:#5b6b7d;
+  --line:#dde6ef;
+  --bg:#f4f7fb;
+  --track:#e6ecf3;
+  --card:#ffffff;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);}
+body{
+  font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  color:var(--ink);
+  letter-spacing:.01em;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding:14px 16px 18px;
+}
+
+.section-head{
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.14em;
+  color:var(--navy);
+  text-transform:uppercase;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:14px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 16px 14px;
+  box-shadow:0 1px 2px rgba(11,42,74,.04);
+  display:flex;
+  flex-direction:column;
+}
+
+.card-title{
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:11px;
+  line-height:1.3;
+}
+
+.rows{display:flex;flex-direction:column;gap:7px;margin-bottom:11px;}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 130px 36px;
+  align-items:center;
+  gap:10px;
+  font-size:11.5px;
+  color:#2a3b50;
+  line-height:1.3;
+}
+
+.label{padding-right:4px;}
+
+.bar{
+  position:relative;
+  height:8px;
+  background:var(--track);
+  border-radius:5px;
+  overflow:hidden;
+}
+.bar > span{
+  display:block;
+  height:100%;
+  border-radius:5px;
+}
+
+.pct{
+  font-weight:700;
+  font-size:11.5px;
+  color:var(--ink);
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+/* Left card — blue family */
+.b-navy   > span{background:var(--navy);}
+.b-mid    > span{background:var(--regent);}
+.b-light  > span{background:#c9d6e3;}
+.b-faint  > span{background:#dce4ec;}
+
+/* Right card — gold family */
+.b-gold   > span{background:var(--gold);}
+.b-blue   > span{background:var(--regent);}
+.b-blue2  > span{background:#c9d6e3;}
+.b-grey   > span{background:#dce4ec;}
+
+.callout{
+  margin-top:auto;
+  font-size:11px;
+  line-height:1.5;
+  color:#3b4a60;
+  padding:9px 11px;
+  border-left:3px solid var(--regent);
+  background:#f1f6fb;
+  border-radius:0 6px 6px 0;
+}
+.callout.gold{
+  border-left-color:var(--gold);
+  background:#fbf5ea;
+}
+.callout b{color:var(--ink);font-weight:700;}
+
+@media (max-width:640px){
+  .grid{grid-template-columns:1fr;}
+  .row{grid-template-columns:1fr 90px 34px;}
+}
+</style>
+</head>
+<body>
+
+<div class="section-head">Cash Visibility &amp; Forecasting</div>
+
+<div class="grid">
+
+  <!-- LEFT CARD -->
+  <div class="card">
+    <div class="card-title">Real-time visibility into global cash position</div>
+    <div class="rows">
+      <div class="row">
+        <div class="label">Near real-time across all entities</div>
+        <div class="bar b-navy"><span style="width:95%"></span></div>
+        <div class="pct">65%</div>
+      </div>
+      <div class="row">
+        <div class="label">Good visibility, regional blind spots</div>
+        <div class="bar b-mid"><span style="width:30%"></span></div>
+        <div class="pct">19%</div>
+      </div>
+      <div class="row">
+        <div class="label">Delayed — working off prior-day balances</div>
+        <div class="bar b-light"><span style="width:19%"></span></div>
+        <div class="pct">12%</div>
+      </div>
+      <div class="row">
+        <div class="label">Fragmented — regions operate independently</div>
+        <div class="bar b-faint"><span style="width:7%"></span></div>
+        <div class="pct">4%</div>
+      </div>
+    </div>
+    <div class="callout">
+      <b>65%</b> claim real-time visibility, yet <b>69%</b> cite poor data quality as their #1 forecasting barrier. Seeing a cash position and reasoning from it are different problems — and the gap between the two is fertile ground for peer exchange.
+    </div>
+  </div>
+
+  <!-- RIGHT CARD -->
+  <div class="card">
+    <div class="card-title">Biggest barrier to accurate cash flow forecasting</div>
+    <div class="rows">
+      <div class="row">
+        <div class="label">Poor data quality / inconsistent BU inputs</div>
+        <div class="bar b-gold"><span style="width:95%"></span></div>
+        <div class="pct">69%</div>
+      </div>
+      <div class="row">
+        <div class="label">Too many manual steps / spreadsheets</div>
+        <div class="bar b-blue"><span style="width:23%"></span></div>
+        <div class="pct">15%</div>
+      </div>
+      <div class="row">
+        <div class="label">Lack of buy-in from non-treasury stakeholders</div>
+        <div class="bar b-blue2"><span style="width:19%"></span></div>
+        <div class="pct">12%</div>
+      </div>
+      <div class="row">
+        <div class="label">Tariff / trade policy uncertainty</div>
+        <div class="bar b-grey"><span style="width:7%"></span></div>
+        <div class="pct">4%</div>
+      </div>
+    </div>
+    <div class="callout gold">
+      Bob Stark (Kyriba) framed it directly at the meeting: <b>"there is no AI strategy without a data strategy."</b> This single poll result validates that point.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
