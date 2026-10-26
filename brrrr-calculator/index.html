@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BRRRR Deal Calculator</title>
-<meta name="description" content="Price a buy-rehab-rent-refinance deal. Enter the numbers and see the max offer, cash left in after the refi, cash flow and DSCR update live. Inputs are saved in the URL so you can bookmark a deal.">
+<meta name="description" content="Price a buy-rehab-rent-refinance deal the way lenders and experienced investors do: lender-style loan sizing, a cash-flow-safe loan, a hold-free-and-clear option, leverage check, stress test and a plain-English verdict. Inputs save in the URL.">
 <style>
 :root{
   color-scheme:light;
   --navy:#0B2A4A; --chathams:#143D6B; --ink:#0B2A4A; --mute:#5b6b7d; --faint:#8a98a8;
-  --line:#dde6ef; --bg:#f4f7fb; --card:#fff; --soft:#eef3f9;
+  --line:#dde6ef; --bg:#f4f7fb; --card:#fff; --soft:#eef3f9; --hilite:#eaf2fb;
   --good:#1d7a4a; --good-bg:#e9f6ee; --good-line:#bfe3cc;
   --warn:#8a6d1f; --warn-bg:#fbf4e1; --warn-line:#ecd9a0;
   --bad:#8a2727;  --bad-bg:#fdf3f3;  --bad-line:#e6b9b9;
@@ -18,14 +18,15 @@
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased;font-size:14px}
 .num{font-variant-numeric:tabular-nums}
+button{font:inherit}
 
 header{background:var(--navy);color:#fff;padding:18px 0}
-.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 16px}
 .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
-header h1{font-size:19px;font-weight:700;letter-spacing:.005em}
-header p{color:#cfd9e6;font-size:12.5px;margin-top:3px;max-width:640px}
+header h1{font-size:19px;font-weight:700}
+header p{color:#cfd9e6;font-size:12.5px;margin-top:3px;max-width:680px}
 .btns{display:flex;gap:8px}
-.btn{font:inherit;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;white-space:nowrap}
+.btn{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;white-space:nowrap}
 .btn:hover{background:rgba(255,255,255,.1)}
 .btn.primary{background:#fff;color:var(--navy);border-color:#fff}
 .btn.primary:hover{background:#e8f0fb}
@@ -36,6 +37,7 @@ main{padding:18px 0 60px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;box-shadow:0 1px 2px rgba(11,42,74,.04)}
 .card+.card{margin-top:18px}
 h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+h3 small{font-weight:500;letter-spacing:0;text-transform:none;color:var(--faint);margin-left:6px}
 section+section{margin-top:18px}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
 .field label,.sel label{display:block;font-size:12px;color:var(--mute);margin-bottom:4px}
@@ -47,8 +49,11 @@ section+section{margin-top:18px}
 .ctl input::-webkit-outer-spin-button,.ctl input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .ctl input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .hint{font-size:11px;color:var(--faint);margin-top:3px;line-height:1.35}
-.sel{grid-column:1/-1}
-.sel select{width:100%;min-width:0;max-width:100%;font:inherit;font-size:14px;padding:7px 8px;border:1px solid #c9d5e2;border-radius:6px;background:#fff;color:var(--ink)}
+.full{grid-column:1/-1}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:4px}
+.seg button{border:0;background:transparent;border-radius:6px;padding:7px 4px;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer;line-height:1.2}
+.seg button.on{background:var(--navy);color:#fff}
+.seg button:hover:not(.on){background:#fff}
 .foot{font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:10px;margin-top:18px;line-height:1.4}
 
 .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -62,13 +67,20 @@ section+section{margin-top:18px}
 .badge.bad{background:var(--bad-bg);border-color:var(--bad-line)}
 .badge.neutral{background:var(--soft);border-color:var(--line)}
 
+.verdicts{display:grid;gap:8px;margin:14px 0 2px}
+.v{display:grid;grid-template-columns:10px 1fr;gap:10px;align-items:start;font-size:13px;line-height:1.45}
+.v i{display:block;width:10px;height:10px;border-radius:50%;margin-top:5px}
+.v.good i{background:var(--good)} .v.warn i{background:#d4a92c} .v.bad i{background:#c0392b}
+.v b{font-weight:700}
+
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
 .tile{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
-.tile .v{font-size:18px;font-weight:700;line-height:1.2;margin-top:2px}
+.tile .v2{font-size:18px;font-weight:700;line-height:1.2;margin-top:2px}
 .tile .s{font-size:11px;color:var(--faint);line-height:1.3}
 .note{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.45;border:1px solid}
 .note.warn{background:var(--warn-bg);border-color:var(--warn-line);color:#5c4710}
-.note.quiet{background:transparent;border-color:transparent;color:var(--mute);padding:0;margin-top:12px}
+.note.bad{background:var(--bad-bg);border-color:var(--bad-line);color:#6b1f1f}
+.note.quiet{background:transparent;border-color:transparent;color:var(--mute);padding:0;margin-top:10px}
 
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
 table{width:100%;border-collapse:collapse}
@@ -79,16 +91,19 @@ tr.indent td:first-child{padding-left:12px;color:var(--faint)}
 tr.strong td{border-top:1px solid var(--line);font-weight:700}
 tr.strong td:first-child{color:var(--ink);font-size:12.5px}
 
-.sens{overflow-x:auto}
-.sens table th{font-size:11px;color:var(--faint);font-weight:600;text-align:right;padding:4px 10px 6px 0;border-bottom:1px solid var(--line);white-space:nowrap}
-.sens table th:first-child{text-align:left}
-.sens table td{padding:6px 10px 6px 0;border-bottom:1px solid #eef2f6;white-space:nowrap}
-.sens table td:first-child{color:var(--ink);font-size:13px}
-.sens tr.base td{background:#eaf2fb;font-weight:600}
-.sens .pct{color:var(--faint);font-size:11px;margin-left:4px}
+.wide{overflow-x:auto}
+.wide table th{font-size:11px;color:var(--faint);font-weight:600;text-align:right;padding:4px 10px 6px 0;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:bottom}
+.wide table th:first-child{text-align:left}
+.wide table td{padding:6px 10px 6px 0;border-bottom:1px solid #eef2f6;white-space:nowrap;text-align:right;font-size:13px}
+.wide table td:first-child{color:var(--ink);text-align:left}
+.wide tr.on td{background:var(--hilite);font-weight:600}
+.wide .pick{border:1px solid #c9d5e2;background:#fff;border-radius:5px;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;color:var(--chathams)}
+.wide .pick:hover{border-color:var(--chathams)}
+.wide tr.on .pick{background:var(--navy);color:#fff;border-color:var(--navy);cursor:default}
+.wide .d{color:var(--faint);font-size:11px;display:block;font-weight:400}
 
 .sticky{display:none}
-@media (max-width:860px){
+@media (max-width:900px){
   .grid{grid-template-columns:1fr}
   .cols{grid-template-columns:1fr}
   .sticky{display:block;position:sticky;top:0;z-index:5;background:rgba(244,247,251,.95);backdrop-filter:blur(4px);padding:8px 0;margin:-6px 0 12px;border-bottom:1px solid var(--line)}
@@ -101,6 +116,7 @@ tr.strong td:first-child{color:var(--ink);font-size:12.5px}
 @media (max-width:480px){
   .fields{grid-template-columns:1fr}
   .tiles{grid-template-columns:1fr 1fr}
+  .seg{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -110,7 +126,7 @@ tr.strong td:first-child{color:var(--ink);font-size:12.5px}
   <div class="wrap bar">
     <div>
       <h1>BRRRR Deal Calculator</h1>
-      <p>Buy, rehab, rent, refinance. Change any number and the max offer updates live. The URL carries your inputs, so bookmark it or hit Copy link to save a deal.</p>
+      <p>Buy, rehab, rent, then decide whether to refinance at all. Loans are sized the way DSCR lenders size them, and every number updates as you type. The URL carries your inputs, so bookmark it or hit Copy link to save a deal.</p>
     </div>
     <div class="btns">
       <button class="btn primary" id="copy" type="button">Copy link</button>
@@ -129,118 +145,61 @@ tr.strong td:first-child{color:var(--ink);font-size:12.5px}
   </div>
 </main>
 
-<script>
-(function(){
-'use strict';
+<script type="module">
+import {
+  BRRRR_DEFAULTS, NUMERIC_KEYS, PERCENT_KEYS, LOAN_MODES,
+  computeBrrrr, loanOptions, stressTest, verdict, inputsFromQuery, queryFromInputs,
+} from './brrrr-math.js';
 
-// ── Defaults (mirror bbr-deal-bot/backend/app/config/defaults.py) ─────────────
-// Percent fields are stored as whole numbers in the form and the URL.
-const DEFAULTS = {
-  price:80000, close:3000,
-  rehab:40000, hold:6, carry:1200,
-  arv:150000, ltv:75, rate:7.5, amort:30, reficlose:4000, dscr:1.2,
-  rent:1275, vac:5, maint:8, capex:5, mgmt:8, ti:4800,
-  maxleft:0,
-  basis:'noi'
-};
-const PERCENT = new Set(['ltv','rate','vac','maint','capex','mgmt']);
-
+// ── Form definition ───────────────────────────────────────────────────────────
 const SECTIONS = [
   {title:'Buy', fields:[
-    {k:'price', label:'Purchase price', unit:'$', step:1000},
-    {k:'close', label:'Closing & acquisition costs', unit:'$', step:500, hint:'Assignment fee, attorney, title, transfer tax.'}
+    {k:'purchasePrice', label:'Purchase price', unit:'$', step:1000},
+    {k:'closingCosts', label:'Closing & acquisition costs', unit:'$', step:500, hint:'Assignment fee, attorney, title, transfer tax.'},
   ]},
   {title:'Rehab & hold', fields:[
-    {k:'rehab', label:'Rehab budget', unit:'$', step:1000},
-    {k:'hold', label:'Months until refi closes', unit:'mo', step:1, hint:'Rehab + lease-up + lender seasoning.'},
-    {k:'carry', label:'Holding cost per month', unit:'$', step:100, hint:'Taxes, insurance, utilities, plus hard-money interest if financed.'}
+    {k:'rehabCost', label:'Rehab bids', unit:'$', step:1000},
+    {k:'contingencyPct', label:'Contingency', unit:'%', step:5, hint:'10–15% is normal; 15–20% on pre-1980 houses; 20–25% for a gut.'},
+    {k:'holdMonths', label:'Months until refi closes', unit:'mo', step:1, hint:'Rehab 4–6 + lease-up 1–3 + lender seasoning. Eight is realistic; six is a sprint.'},
+    {k:'monthlyHoldingCost', label:'Holding cost per month', unit:'$', step:100, hint:'Taxes, insurance, utilities, lawn/snow, plus hard-money interest if financed.'},
   ]},
-  {title:'Refinance', basis:true, fields:[
-    {k:'arv', label:'After-repair value (appraisal)', unit:'$', step:1000},
-    {k:'ltv', label:'Loan-to-value', unit:'%', step:1},
-    {k:'rate', label:'Interest rate', unit:'%', step:0.125},
-    {k:'amort', label:'Amortization', unit:'yr', step:5},
-    {k:'reficlose', label:'Refi closing costs', unit:'$', step:500},
-    {k:'dscr', label:'Lender minimum DSCR', unit:'×', step:0.05, hint:'Set to 0 to size the loan on LTV alone.'}
+  {title:'Value', fields:[
+    {k:'arv', label:'Your ARV estimate', unit:'$', step:1000, hint:'From 3+ renovated sold comps within 6 months and half a mile, not an area $/sqft.'},
+    {k:'appraisalCushionPct', label:'Appraisal cushion', unit:'%', step:5, hint:'The refi is sized on ARV minus this. Appraisals are where BRRRRs die; 10% is the usual hedge.'},
   ]},
-  {title:'Rent', fields:[
-    {k:'rent', label:'Monthly rent', unit:'$', step:25},
-    {k:'vac', label:'Vacancy', unit:'%', step:1},
-    {k:'maint', label:'Maintenance', unit:'%', step:1},
-    {k:'capex', label:'CapEx reserve', unit:'%', step:1},
-    {k:'mgmt', label:'Management', unit:'%', step:1},
-    {k:'ti', label:'Taxes + insurance per year', unit:'$', step:100}
+  {title:'Rent & expenses', fields:[
+    {k:'monthlyRent', label:'Monthly rent', unit:'$', step:25, hint:'Your lease or expected rent.'},
+    {k:'marketRent', label:'Appraiser market rent', unit:'$', step:25, hint:'Form 1007 rent. Lenders qualify on the lower of lease and market. 0 = same as rent.'},
+    {k:'vacancyPct', label:'Vacancy', unit:'%', step:1},
+    {k:'maintenancePct', label:'Maintenance', unit:'%', step:1},
+    {k:'capexPct', label:'CapEx reserve', unit:'%', step:1, hint:'5% after a full rehab; 6–10% if roof, furnace or sewer line stay.'},
+    {k:'mgmtPct', label:'Management', unit:'%', step:1, hint:'Budget it even if you self-manage.'},
+    {k:'taxesAnnual', label:'Property taxes per year', unit:'$', step:100, hint:'Use the post-rehab assessment, not the purchase price.'},
+    {k:'insuranceAnnual', label:'Insurance per year', unit:'$', step:100, hint:'Landlord policy. Premiums are rising 10–20% a year.'},
+    {k:'hoaMonthly', label:'HOA per month', unit:'$', step:10},
   ]},
-  {title:'Target', fields:[
-    {k:'maxleft', label:'Max cash left in deal', unit:'$', step:1000, hint:'$0 means a full BRRRR: the refi returns every dollar you put in.'}
-  ]}
+  {title:'Refinance terms', fields:[
+    {k:'refiLtv', label:'Max loan-to-value', unit:'%', step:1, hint:'75% is the ceiling for a strong 1-unit file; 70% for 2–4 units or weaker files.'},
+    {k:'refiRate', label:'Interest rate', unit:'%', step:0.125, hint:'Get a quote. DSCR cash-out ran about 6–7.5% in 2026.'},
+    {k:'refiAmortYears', label:'Amortization', unit:'yr', step:5},
+    {k:'minDscr', label:'Lender DSCR floor', unit:'×', step:0.05, hint:'Rent ÷ PITIA. 1.0 is most lenders’ floor; 1.2–1.25 gets the best pricing. 0 = size on LTV only.'},
+    {k:'refiClosingPct', label:'Refi costs, % of loan', unit:'%', step:0.5, hint:'Points + recording tax. 2–5% is typical; NY recording tax alone is about 1.25%.'},
+    {k:'refiClosingFixed', label:'Refi costs, fixed', unit:'$', step:250, hint:'Appraisal with rent schedule, attorney, title.'},
+    {k:'reserveMonths', label:'Lender reserves', unit:'mo', step:1, hint:'Months of PITIA the lender wants to see liquid after closing. Usually 6.'},
+  ]},
+  {title:'Strategy', mode:true, fields:[
+    {k:'targetCashLeft', label:'Max cash left in', unit:'$', step:1000, hint:'For the refi max offer. $0 is a full BRRRR; 25–70% recovery is a win at today’s rates.'},
+    {k:'targetCashFlow', label:'Min cash flow / month', unit:'$', step:25, hint:'Sizes the cash-flow-safe loan. $100–300 per door is the usual floor.'},
+    {k:'targetYield', label:'Target yield if held in cash', unit:'%', step:0.5, hint:'Sets the max offer when you take no loan.'},
+  ]},
 ];
-
-// ── Math ──────────────────────────────────────────────────────────────────────
-function pmt(principal, annualRate, years){
-  const n = Math.max(1, Math.round(years*12)), r = annualRate/12;
-  if(principal <= 0) return 0;
-  if(r === 0) return principal/n;
-  return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
-}
-function principalFor(payment, annualRate, years){
-  const n = Math.max(1, Math.round(years*12)), r = annualRate/12;
-  if(payment <= 0) return 0;
-  if(r === 0) return payment*n;
-  return payment*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n));
-}
-function compute(f){
-  const n = k => { const v = parseFloat(f[k]); return Number.isFinite(v) ? (PERCENT.has(k) ? v/100 : v) : 0; };
-  const price=n('price'), close=n('close'), rehab=n('rehab'), hold=n('hold'), carry=n('carry');
-  const arv=n('arv'), ltv=n('ltv'), rate=n('rate'), amort=n('amort'), reficlose=n('reficlose'), minDscr=n('dscr');
-  const rent=n('rent'), vac=n('vac'), maint=n('maint'), capex=n('capex'), mgmt=n('mgmt'), ti=n('ti');
-  const maxleft=n('maxleft'); const basis = f.basis === 'lender' ? 'lender' : 'noi';
-
-  const holding = hold*carry;
-  const allIn = price+close+rehab+holding;
-
-  const gross = rent*12, vacancy = gross*vac, egi = gross-vacancy;
-  const mnt = gross*maint, cpx = gross*capex, mg = gross*mgmt;
-  const opex = mnt+cpx+mg+ti, noi = egi-opex;
-
-  const loanByLtv = Math.max(0, arv*ltv);
-  let maxPi = Infinity;
-  if(minDscr > 0){
-    maxPi = basis === 'lender' ? rent/minDscr - ti/12 : noi/minDscr/12;
-    maxPi = Math.max(0, maxPi);
-  }
-  const loanByDscr = Number.isFinite(maxPi) ? principalFor(maxPi, rate, amort) : Infinity;
-  let loan, limiter;
-  if(loanByLtv <= 0 && !(loanByDscr > 0)){ loan = 0; limiter = 'none'; }
-  else if(loanByDscr < loanByLtv){ loan = loanByDscr; limiter = 'dscr'; }
-  else { loan = loanByLtv; limiter = 'ltv'; }
-
-  const net = loan - reficlose;
-  const cashLeft = allIn - net;
-  const equity = arv - loan;
-  const payment = pmt(loan, rate, amort), ads = payment*12;
-  const cf = (noi-ads)/12;
-  let dscr = null;
-  if(ads > 0) dscr = basis === 'lender' ? gross/(ads+ti) : noi/ads;
-  const coc = cashLeft > 0 ? cf*12/cashLeft : null;
-  const cap = allIn > 0 ? noi/allIn : null;
-  const maoRaw = net + maxleft - close - rehab - holding;
-
-  return {price, close, rehab, hold, carry, arv, ltv, rate, amort, reficlose, minDscr, rent, vac, maint, capex, mgmt, ti, maxleft, basis,
-    holding, allIn, gross, vacancy, egi, mnt, cpx, mg, opex, noi,
-    loanByLtv, loanByDscr: Number.isFinite(loanByDscr) ? loanByDscr : loanByLtv, limiter, loan, net, cashLeft, equity, payment, ads,
-    cf, dscr, coc, cap, mao: Math.max(0, maoRaw), priceVsMao: price - maoRaw};
-}
-
-// Thresholds mirror the grading constants in defaults.py.
-function tones(r){
-  return {
-    cashLeft: r.cashLeft <= r.maxleft + 0.5 ? 'good' : r.cashLeft <= 30000 ? 'warn' : 'bad',
-    cf: r.cf >= 300 ? 'good' : r.cf >= 100 ? 'warn' : 'bad',
-    dscr: r.dscr == null ? 'neutral' : r.dscr >= 1.25 ? 'good' : r.dscr >= 1.1 ? 'warn' : 'bad',
-    price: r.priceVsMao <= 0.5 ? 'good' : r.priceVsMao <= 10000 ? 'warn' : 'bad'
-  };
-}
+const MODE_LABELS = {lender:'Lender max', safe:'Cash-flow safe', custom:'Custom loan', none:'No loan'};
+const MODE_HINTS = {
+  lender:'Largest loan a DSCR lender would write: the lesser of LTV on the cushioned appraisal and what rent covers at the DSCR floor.',
+  safe:'Largest loan that still leaves your minimum monthly cash flow after full reserves. Never more than the lender max.',
+  custom:'Pick any amount. Flagged if it is more than the lender would give.',
+  none:'Buy and rehab with cash, keep it free and clear, refinance later if a better use for the cash shows up.',
+};
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 const money = n => (n < -0.5 ? '−' : '') + '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
@@ -248,179 +207,197 @@ const pct = (n, d=1) => n == null ? '—' : (n*100).toFixed(d) + '%';
 const ratio = n => n == null ? '—' : n.toFixed(2) + '×';
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-// ── State + URL ───────────────────────────────────────────────────────────────
-let form = Object.assign({}, DEFAULTS);
-for(const k in form) form[k] = String(form[k]);
-
-function readUrl(){
-  const q = new URLSearchParams(location.search);
-  for(const k in DEFAULTS){
-    if(!q.has(k)) continue;
-    const v = q.get(k);
-    if(k === 'basis'){ if(v === 'noi' || v === 'lender') form.basis = v; continue; }
-    if(Number.isFinite(parseFloat(v))) form[k] = v;
-  }
+// Thresholds mirror the deal bot's grading constants.
+function tones(i, r){
+  return {
+    cashLeft: r.cashLeftIn <= i.targetCashLeft + 0.5 ? 'good' : r.cashLeftIn <= 30000 ? 'warn' : 'bad',
+    cf: r.refiLoan <= 0 ? 'good' : r.monthlyCashFlow >= 300 ? 'good' : r.monthlyCashFlow >= 100 ? 'warn' : 'bad',
+    dscr: r.dscr == null ? 'neutral' : r.dscr >= 1.25 ? 'good' : r.dscr >= 1.1 ? 'warn' : 'bad',
+    price: r.priceVsMao <= 0.5 ? 'good' : r.priceVsMao <= 10000 ? 'warn' : 'bad',
+    coc: r.cashOnCash == null ? 'good' : r.cashOnCash >= 0.08 ? 'good' : r.cashOnCash >= 0 ? 'warn' : 'bad',
+    yieldT: (r.unleveredYield ?? 0) >= 0.08 ? 'good' : (r.unleveredYield ?? 0) >= 0.06 ? 'warn' : 'bad',
+    spread: r.leverageSpread == null ? 'neutral' : r.leverageSpread >= 0.01 ? 'good' : r.leverageSpread >= -0.01 ? 'warn' : 'bad',
+  };
 }
+
+// ── State + URL ───────────────────────────────────────────────────────────────
+function toForm(i){
+  const f = {loanMode: i.loanMode};
+  for(const k of NUMERIC_KEYS){ const v = PERCENT_KEYS.has(k) ? i[k]*100 : i[k]; f[k] = String(Math.round(v*1000)/1000); }
+  return f;
+}
+function fromForm(f){
+  const i = Object.assign({}, BRRRR_DEFAULTS, {loanMode: f.loanMode});
+  for(const k of NUMERIC_KEYS){ const n = parseFloat(f[k]); i[k] = Number.isFinite(n) ? (PERCENT_KEYS.has(k) ? n/100 : n) : 0; }
+  return i;
+}
+let form = toForm(inputsFromQuery(Object.fromEntries(new URLSearchParams(location.search))));
+
 function writeUrl(){
-  const q = new URLSearchParams();
-  for(const k in DEFAULTS){
-    if(k === 'basis'){ if(form.basis !== DEFAULTS.basis) q.set(k, form.basis); continue; }
-    const v = parseFloat(form[k]);
-    if(!Number.isFinite(v) || v === DEFAULTS[k]) continue;
-    q.set(k, String(Math.round(v*1000)/1000));
-  }
-  const qs = q.toString();
+  const qs = queryFromInputs(fromForm(form)).toString();
   history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+// ── Render: inputs ────────────────────────────────────────────────────────────
 const $inputs = document.getElementById('inputs');
 const $results = document.getElementById('results');
 const $sticky = document.getElementById('sticky');
 
+function fieldHtml(f){
+  return `<div class="field${f.full?' full':''}">
+    <label for="f-${f.k}">${esc(f.label)}</label>
+    <div class="ctl">${f.unit==='$'?'<span>$</span>':''}<input id="f-${f.k}" data-k="${f.k}" type="number" inputmode="decimal" step="${f.step}" value="${esc(form[f.k])}">${f.unit!=='$'?`<span>${esc(f.unit)}</span>`:''}</div>
+    ${f.hint?`<div class="hint">${f.hint}</div>`:''}
+  </div>`;
+}
 function renderInputs(){
   $inputs.innerHTML = SECTIONS.map(s => `
     <section>
       <h3>${esc(s.title)}</h3>
-      <div class="fields">
-        ${s.fields.map(f => `
-          <div class="field">
-            <label for="f-${f.k}">${esc(f.label)}</label>
-            <div class="ctl">
-              ${f.unit === '$' ? '<span>$</span>' : ''}
-              <input id="f-${f.k}" data-k="${f.k}" type="number" inputmode="decimal" step="${f.step}" value="${esc(form[f.k])}">
-              ${f.unit !== '$' ? `<span>${esc(f.unit)}</span>` : ''}
-            </div>
-            ${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}
-          </div>`).join('')}
-        ${s.basis ? `
-          <div class="sel">
-            <label for="f-basis">DSCR measured as</label>
-            <select id="f-basis" data-k="basis">
-              <option value="noi"${form.basis==='noi'?' selected':''}>NOI ÷ P&amp;I (conservative)</option>
-              <option value="lender"${form.basis==='lender'?' selected':''}>Gross rent ÷ PITI (lender style)</option>
-            </select>
-            <div class="hint" id="basis-hint"></div>
-          </div>` : ''}
-      </div>
+      ${s.mode ? `
+        <div class="full" style="margin-bottom:10px">
+          <label class="hint" style="margin-bottom:4px;font-size:12px;color:var(--mute)">Which loan do you take after the rehab?</label>
+          <div class="seg" id="modes">${LOAN_MODES.map(m => `<button type="button" data-mode="${m}" class="${form.loanMode===m?'on':''}">${MODE_LABELS[m]}</button>`).join('')}</div>
+          <div class="hint" id="mode-hint">${MODE_HINTS[form.loanMode]}</div>
+        </div>
+        <div class="fields" id="custom-wrap" style="margin-bottom:10px;${form.loanMode==='custom'?'':'display:none'}">
+          ${fieldHtml({k:'customLoan', label:'Loan amount', unit:'$', step:1000, full:true})}
+        </div>` : ''}
+      <div class="fields">${s.fields.map(fieldHtml).join('')}</div>
     </section>`).join('') + `
-    <div class="foot">Defaults are conservative Rochester, NY assumptions from the BBR deal bot. ARV is what the refi appraiser will say, not what the listing hopes for.</div>`;
-  updateBasisHint();
-}
-function updateBasisHint(){
-  const h = document.getElementById('basis-hint');
-  if(h) h.textContent = form.basis === 'lender'
-    ? 'How most DSCR lenders qualify a 1–4 unit rental. Reserves are ignored, so the loan can be larger than the conservative basis supports.'
-    : 'Vacancy, maintenance, CapEx and management come off the top first.';
+    <div class="foot">Defaults are conservative Rochester, NY assumptions from the BBR deal bot and a 2026 review of lender and practitioner practice. ARV is what the refi appraiser will say, not what the listing hopes for.</div>`;
 }
 
-function row(label, value, opts={}){
-  const cls = [opts.indent?'indent':'', opts.strong?'strong':''].filter(Boolean).join(' ');
-  return `<tr class="${cls}"><td>${label}</td><td class="num ${opts.tone||''}">${value}</td></tr>`;
+// ── Render: results ───────────────────────────────────────────────────────────
+function row(label, value, o={}){
+  const cls = [o.indent?'indent':'', o.strong?'strong':''].filter(Boolean).join(' ');
+  return `<tr class="${cls}"><td>${label}</td><td class="num ${o.tone||''}">${value}</td></tr>`;
 }
 function tile(label, value, sub, tone){
-  return `<div class="tile"><div class="label">${label}</div><div class="v num ${tone||''}">${value}</div><div class="s">${sub||''}</div></div>`;
+  return `<div class="tile"><div class="label">${label}</div><div class="v2 num ${tone||''}">${value}</div><div class="s">${sub||''}</div></div>`;
 }
+function vline(v){ return `<div class="v ${v.tone}"><i></i><div>${esc(v.text)}</div></div>`; }
 
 function renderResults(){
-  const r = compute(form), t = tones(r);
+  const i = fromForm(form);
+  const r = computeBrrrr(i), t = tones(i, r), v = verdict(i, r);
+  const opts = loanOptions(i), stress = stressTest(i);
   const over = r.priceVsMao > 0.5, under = r.priceVsMao < -0.5;
-  const priceMsg = over ? `Your price is ${money(r.priceVsMao)} above the max offer`
-                 : under ? `Your price is ${money(-r.priceVsMao)} below the max offer`
-                 : 'Your price is right at the max offer';
-
-  // Sensitivity: ARV ±10%
-  const sens = [0.9,0.95,1,1.05,1.1].map(m => {
-    const rr = compute(Object.assign({}, form, {arv: String(r.arv*m)}));
-    return {m, rr, tt: tones(rr)};
-  });
+  const usingRefi = r.refiLoan > 0;
+  const priceMsg = over ? `${money(r.priceVsMao)} above the max offer` : under ? `${money(-r.priceVsMao)} below the max offer` : 'right at the max offer';
 
   $results.innerHTML = `
     <div class="card">
       <div class="head">
         <div>
-          <div class="label">Max offer (BRRRR)</div>
+          <div class="label">Max offer ${usingRefi ? '(refi, ' + MODE_LABELS[r.loanMode].toLowerCase() + ')' : '(cash hold)'}</div>
           <div class="big num">${money(r.mao)}</div>
-          <div class="sub">Leaves no more than ${money(r.maxleft)} in the deal after the refi.</div>
+          <div class="sub">${usingRefi
+            ? `Leaves no more than ${money(i.targetCashLeft)} in after a ${money(r.refiLoan)} refi.${r.maoYield>0?` As a cash hold at ${pct(i.targetYield,0)}: ${money(r.maoYield)}.`:''}`
+            : `Earns ${pct(i.targetYield,0)} unlevered with no loan.${r.lenderLoan>0?` With the lender-max refi: ${money(opts[2].results.mao)}.`:''}`}</div>
         </div>
-        <span class="badge ${t.price}">${priceMsg}</span>
+        <span class="badge ${t.price}">Your price is ${priceMsg}</span>
       </div>
+      <div class="verdicts">${vline(v.rental)}${vline(v.leverage)}${vline(v.brrrr)}</div>
       <div class="tiles">
-        ${tile(r.cashLeft < -0.5 ? 'Cash pulled out' : 'Cash left in', money(Math.abs(r.cashLeft)), r.cashLeft < -0.5 ? 'more than you put in' : `of ${money(r.allIn)} all-in`, t.cashLeft)}
-        ${tile('Cash flow / mo', money(r.cf), 'after refi P&amp;I and reserves', t.cf)}
-        ${tile('DSCR', ratio(r.dscr), r.basis === 'lender' ? 'rent ÷ PITI' : 'NOI ÷ P&amp;I', t.dscr)}
-        ${tile('Cash-on-cash', r.coc == null ? '∞' : pct(r.coc), r.coc == null ? 'all capital returned' : 'annual CF ÷ cash left in', r.coc == null ? 'good' : r.coc >= 0.1 ? 'good' : r.coc >= 0 ? 'warn' : 'bad')}
-        ${tile('Equity after refi', money(r.equity), `${pct(r.arv > 0 ? r.equity/r.arv : null, 0)} of ARV`)}
-        ${tile('Cap rate', pct(r.cap), 'NOI ÷ all-in cost')}
+        ${tile(r.cashLeftIn < -0.5 ? 'Cash pulled out' : 'Cash left in', money(Math.abs(r.cashLeftIn)), usingRefi ? `${pct(r.capitalRecoveredPct,0)} of ${money(r.allInCost)} recovered` : `all ${money(r.allInCost)} stays in`, usingRefi ? t.cashLeft : 'neutral')}
+        ${tile('Cash flow / mo', money(r.monthlyCashFlow), usingRefi ? 'after P&amp;I and full reserves' : 'no debt, after full reserves', t.cf)}
+        ${tile('Lender DSCR', ratio(r.dscr), usingRefi ? 'rent ÷ PITIA' : 'no loan', t.dscr)}
+        ${tile('Unlevered yield', pct(r.unleveredYield), 'NOI ÷ all-in, before any loan', t.yieldT)}
+        ${tile('Mortgage constant', pct(r.mortgageConstant), `what a ${pct(i.refiRate,2)} loan costs per year`, t.spread)}
+        ${tile(usingRefi ? 'Cash-on-cash' : 'Equity', usingRefi ? (r.cashOnCash == null ? '∞' : pct(r.cashOnCash)) : money(r.equityAfterRefi), usingRefi ? (r.cashOnCash == null ? 'all capital returned' : 'annual CF ÷ cash left in') : `at ${money(r.appraisedValue)} cushioned value`, usingRefi ? t.coc : 'neutral')}
       </div>
-      ${r.limiter === 'dscr' ? `
-        <div class="note warn"><b>Rent is capping the loan, not the appraisal.</b>
-        At ${ratio(r.minDscr)} coverage the rent supports a ${money(r.loanByDscr)} loan, while ${pct(r.ltv,0)} of ARV would allow ${money(r.loanByLtv)}.
-        More rent, a lower rate, or a lender with a lower DSCR floor raises the max offer; a higher appraisal does not.</div>` : ''}
-      ${r.limiter === 'ltv' && r.minDscr > 0 ? `
-        <div class="note quiet">Loan sized by LTV at ${money(r.loanByLtv)}; the rent would support up to ${money(r.loanByDscr)} at ${ratio(r.minDscr)} coverage.</div>` : ''}
+      ${r.exceedsLender ? `<div class="note bad"><b>That loan is bigger than a lender would write.</b> The lender max here is ${money(r.lenderLoan)}.</div>` : ''}
+      ${usingRefi && r.loanMode==='lender' && r.lenderLimiter==='dscr' ? `<div class="note warn"><b>Rent is capping the loan, not the appraisal.</b> At ${ratio(i.minDscr)} on ${money(r.qualifyingRent)} rent the lender writes ${money(r.loanByDscr)}; ${pct(i.refiLtv,0)} of the ${money(r.appraisedValue)} cushioned value would allow ${money(r.loanByLtv)}. More rent, a lower rate or a lower DSCR floor raises the max offer; a higher appraisal does not.</div>` : ''}
+      ${usingRefi && r.loanMode==='lender' && r.lenderLimiter==='ltv' && i.minDscr>0 ? `<div class="note quiet">Loan sized by LTV at ${money(r.loanByLtv)} on a ${money(r.appraisedValue)} cushioned value; rent would support up to ${money(r.loanByDscr)} at ${ratio(i.minDscr)}.</div>` : ''}
+      ${usingRefi ? `<div class="note quiet">Lender will want about ${money(r.reservesRequired)} liquid after closing (${i.reserveMonths} months of ${money(r.pitia)} PITIA). For comparison, a 25%-down purchase plus this rehab would tie up ${money(r.conventionalCashIn)}.</div>` : ''}
+    </div>
+
+    <div class="card">
+      <h3>Which loan should you take? <small>same deal, three ways. Click one to use it.</small></h3>
+      <div class="wide"><table>
+        <thead><tr><th>Option</th><th>Loan</th><th>Cash out</th><th>Left in</th><th>Recovered</th><th>CF / mo</th><th>DSCR</th><th>CoC</th><th></th></tr></thead>
+        <tbody>${opts.map(o => { const x = o.results, tt = tones(i, x); return `
+          <tr class="num${o.mode===r.loanMode?' on':''}">
+            <td>${o.label}<span class="d">${o.mode==='safe' ? `keeps ≥ ${money(i.targetCashFlow)}/mo` : o.mode==='lender' ? (x.lenderLimiter==='dscr' ? 'capped by rent' : 'capped by LTV') : o.mode==='none' ? 'no refinance' : ''}</span></td>
+            <td>${money(x.refiLoan)}</td>
+            <td>${money(x.netRefiProceeds)}</td>
+            <td class="${x.refiLoan>0?tt.cashLeft:''}">${money(x.cashLeftIn)}</td>
+            <td>${pct(x.capitalRecoveredPct,0)}</td>
+            <td class="${tt.cf}">${money(x.monthlyCashFlow)}</td>
+            <td class="${tt.dscr}">${ratio(x.dscr)}</td>
+            <td class="${x.refiLoan>0?tt.coc:''}">${x.refiLoan>0 ? (x.cashOnCash==null?'∞':pct(x.cashOnCash)) : pct(x.unleveredYield)}</td>
+            <td><button type="button" class="pick" data-pick="${o.mode}">${o.mode===r.loanMode?'Using':'Use'}</button></td>
+          </tr>`; }).join('')}
+        </tbody>
+      </table></div>
+      <div class="note ${t.spread}" style="${t.spread==='good'?'background:var(--good-bg);border-color:var(--good-line);color:#1f4d33':t.spread==='warn'?'':'background:var(--bad-bg);border-color:var(--bad-line);color:#6b1f1f'}">${esc(v.leverage.text)}</div>
+    </div>
+
+    <div class="card">
+      <h3>Stress test <small>one thing goes wrong at a time, with your ${MODE_LABELS[r.loanMode].toLowerCase()} choice</small></h3>
+      <div class="wide"><table>
+        <thead><tr><th>Scenario</th><th>Loan</th><th>Left in</th><th>CF / mo</th><th>DSCR</th><th>Max offer</th></tr></thead>
+        <tbody>${stress.map(s => { const x = s.results, tt = tones(i, x); return `
+          <tr class="num${s.key==='base'?' on':''}">
+            <td>${s.label}${s.detail?`<span class="d">${s.detail}</span>`:''}</td>
+            <td>${money(x.refiLoan)}</td>
+            <td class="${x.refiLoan>0?tt.cashLeft:''}">${money(x.cashLeftIn)}</td>
+            <td class="${tt.cf}">${money(x.monthlyCashFlow)}</td>
+            <td class="${tt.dscr}">${ratio(x.dscr)}</td>
+            <td>${money(x.mao)}</td>
+          </tr>`; }).join('')}
+        </tbody>
+      </table></div>
     </div>
 
     <div class="card cols">
       <section>
         <h3>Buy &amp; rehab</h3>
         <table>
-          ${row('Purchase price', money(r.price))}
-          ${row('Closing & acquisition', money(r.close))}
-          ${row('Rehab', money(r.rehab))}
-          ${row(`Holding (${r.hold} mo × ${money(r.carry)})`, money(r.holding))}
-          ${row('All-in cost', money(r.allIn), {strong:true})}
+          ${row('Purchase price', money(i.purchasePrice))}
+          ${row('Closing & acquisition', money(i.closingCosts))}
+          ${row('Rehab bids', money(i.rehabCost))}
+          ${row(`Contingency (${pct(i.contingencyPct,0)})`, money(r.contingency), {indent:true})}
+          ${row(`Holding (${i.holdMonths} mo × ${money(i.monthlyHoldingCost)})`, money(r.holdingCosts))}
+          ${row('All-in cost', money(r.allInCost), {strong:true})}
         </table>
         <h3 style="margin-top:18px">Refinance</h3>
         <table>
-          ${row('After-repair value', money(r.arv))}
-          ${row(`Loan at ${pct(r.ltv,0)} LTV`, money(r.loanByLtv), {indent:true, tone: r.limiter==='ltv'?'':'warn'})}
-          ${r.minDscr > 0 ? row(`Loan at ${ratio(r.minDscr)} DSCR`, money(r.loanByDscr), {indent:true, tone: r.limiter==='dscr'?'warn':''}) : ''}
-          ${row('Refi loan (lesser of the two)', money(r.loan), {strong:true})}
-          ${row('Refi closing costs', '− ' + money(r.reficlose))}
-          ${row('Net proceeds', money(r.net), {strong:true})}
-          ${row('Cash left in', money(r.cashLeft), {strong:true, tone:t.cashLeft})}
-          ${row('Equity after refi', money(r.equity))}
-          ${row(`Monthly P&amp;I (${pct(r.rate,3)}, ${r.amort} yr)`, money(r.payment))}
+          ${row('Your ARV estimate', money(i.arv))}
+          ${row(`Cushioned value (−${pct(i.appraisalCushionPct,0)})`, money(r.appraisedValue), {indent:true})}
+          ${row(`Loan at ${pct(i.refiLtv,0)} LTV`, money(r.loanByLtv), {indent:true})}
+          ${i.minDscr>0 ? row(`Loan at ${ratio(i.minDscr)} DSCR on ${money(r.qualifyingRent)}`, money(r.loanByDscr), {indent:true}) : ''}
+          ${row('Lender max (lesser)', money(r.lenderLoan))}
+          ${row(`Cash-flow-safe (≥ ${money(i.targetCashFlow)}/mo)`, money(r.safeLoan))}
+          ${row('Loan taken', money(r.refiLoan), {strong:true})}
+          ${row(`Refi costs (${money(i.refiClosingFixed)} + ${pct(i.refiClosingPct,1)})`, '− ' + money(r.refiClosingCosts))}
+          ${row('Net cash out', money(r.netRefiProceeds), {strong:true})}
+          ${row('Cash left in', money(r.cashLeftIn), {strong:true, tone: usingRefi ? t.cashLeft : ''})}
+          ${row('Equity after refi', money(r.equityAfterRefi))}
+          ${row(`Monthly P&amp;I (${pct(i.refiRate,3)}, ${i.refiAmortYears} yr)`, money(r.monthlyPayment))}
+          ${row('PITIA', money(r.pitia))}
         </table>
       </section>
       <section>
         <h3>Operating (annual)</h3>
         <table>
-          ${row('Gross rent', money(r.gross))}
-          ${row(`Vacancy (${pct(r.vac,0)})`, '− ' + money(r.vacancy), {indent:true})}
-          ${row('Effective gross income', money(r.egi), {strong:true})}
-          ${row(`Maintenance (${pct(r.maint,0)})`, '− ' + money(r.mnt), {indent:true})}
-          ${row(`CapEx (${pct(r.capex,0)})`, '− ' + money(r.cpx), {indent:true})}
-          ${row(`Management (${pct(r.mgmt,0)})`, '− ' + money(r.mg), {indent:true})}
-          ${row('Taxes + insurance', '− ' + money(r.ti), {indent:true})}
+          ${row('Gross rent', money(r.grossAnnualRent))}
+          ${row(`Vacancy (${pct(i.vacancyPct,0)})`, '− ' + money(r.vacancyLoss), {indent:true})}
+          ${row('Effective gross income', money(r.effectiveGrossIncome), {strong:true})}
+          ${row(`Maintenance (${pct(i.maintenancePct,0)})`, '− ' + money(r.maintenance), {indent:true})}
+          ${row(`CapEx (${pct(i.capexPct,0)})`, '− ' + money(r.capex), {indent:true})}
+          ${row(`Management (${pct(i.mgmtPct,0)})`, '− ' + money(r.management), {indent:true})}
+          ${row('Taxes + insurance + HOA', '− ' + money(r.taxesInsuranceHoa), {indent:true})}
           ${row('Net operating income', money(r.noi), {strong:true})}
-          ${row('Debt service', '− ' + money(r.ads), {indent:true})}
-          ${row('Annual cash flow', money(r.cf*12), {strong:true, tone:t.cf})}
-          ${row('Monthly cash flow', money(r.cf), {tone:t.cf})}
-          ${row('DSCR', ratio(r.dscr), {tone:t.dscr})}
-          ${row('Cap rate on all-in', pct(r.cap))}
+          ${row('Unlevered yield on all-in', pct(r.unleveredYield), {tone:t.yieldT})}
+          ${row('Debt service', '− ' + money(r.annualDebtService), {indent:true})}
+          ${row('Annual cash flow', money(r.monthlyCashFlow*12), {strong:true, tone:t.cf})}
+          ${row('Monthly cash flow', money(r.monthlyCashFlow), {tone:t.cf})}
+          ${row('Lender DSCR (rent ÷ PITIA)', ratio(r.dscr), {tone:t.dscr})}
+          ${row('Mortgage constant', pct(r.mortgageConstant), {tone:t.spread})}
         </table>
       </section>
-    </div>
-
-    <div class="card">
-      <h3>If the appraisal comes in differently</h3>
-      <div class="sub" style="margin:-4px 0 10px">Same deal, ARV moved ±10%. Everything else held constant.</div>
-      <div class="sens"><table>
-        <thead><tr><th>ARV</th><th>Refi loan</th><th>Cash left in</th><th>Max offer</th><th>CF / mo</th><th>DSCR</th></tr></thead>
-        <tbody>${sens.map(s => `
-          <tr class="num${s.m===1?' base':''}">
-            <td>${money(s.rr.arv)}<span class="pct">${s.m===1?'(base)':`(${s.m>1?'+':'−'}${Math.round(Math.abs(s.m-1)*100)}%)`}</span></td>
-            <td>${money(s.rr.loan)}</td>
-            <td class="${s.tt.cashLeft}">${money(s.rr.cashLeft)}</td>
-            <td>${money(s.rr.mao)}</td>
-            <td class="${s.tt.cf}">${money(s.rr.cf)}</td>
-            <td class="${s.tt.dscr}">${ratio(s.rr.dscr)}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>
-      ${r.limiter === 'dscr' ? '<div class="hint" style="margin-top:8px">Rows look flat because the rent, not the appraisal, is sizing the loan right now.</div>' : ''}
     </div>`;
 
   $sticky.innerHTML = `
@@ -428,24 +405,34 @@ function renderResults(){
       <div><div class="label">Max offer</div><div class="big num">${money(r.mao)}</div></div>
       <span class="badge ${t.price}">${over ? money(r.priceVsMao)+' over' : under ? money(-r.priceVsMao)+' under' : 'at max'}</span>
       <div class="mini num">
-        <div><span>${r.cashLeft < -0.5 ? 'Cash out' : 'Left in'}</span><b class="${t.cashLeft}">${money(Math.abs(r.cashLeft))}</b></div>
-        <div><span>CF / mo</span><b class="${t.cf}">${money(r.cf)}</b></div>
-        <div><span>DSCR</span><b class="${t.dscr}">${ratio(r.dscr)}</b></div>
+        <div><span>${r.cashLeftIn < -0.5 ? 'Cash out' : 'Left in'}</span><b class="${usingRefi?t.cashLeft:'neutral'}">${money(Math.abs(r.cashLeftIn))}</b></div>
+        <div><span>CF / mo</span><b class="${t.cf}">${money(r.monthlyCashFlow)}</b></div>
+        <div><span>Yield vs loan</span><b class="${t.spread}">${pct(r.unleveredYield)} / ${pct(r.mortgageConstant)}</b></div>
       </div>
     </div>`;
   postHeight();
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
+function setMode(m){
+  form.loanMode = m;
+  document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  document.getElementById('mode-hint').textContent = MODE_HINTS[m];
+  document.getElementById('custom-wrap').style.display = m === 'custom' ? '' : 'none';
+  writeUrl(); renderResults();
+}
 $inputs.addEventListener('input', e => {
   const k = e.target.dataset.k; if(!k) return;
-  form[k] = e.target.value;
-  if(k === 'basis') updateBasisHint();
-  writeUrl(); renderResults();
+  form[k] = e.target.value; writeUrl(); renderResults();
+});
+$inputs.addEventListener('click', e => {
+  const b = e.target.closest('button[data-mode]'); if(b) setMode(b.dataset.mode);
+});
+$results.addEventListener('click', e => {
+  const b = e.target.closest('button[data-pick]'); if(b) setMode(b.dataset.pick);
 });
 document.getElementById('reset').addEventListener('click', () => {
-  form = Object.assign({}, DEFAULTS); for(const k in form) form[k] = String(form[k]);
-  renderInputs(); writeUrl(); renderResults();
+  form = toForm(BRRRR_DEFAULTS); renderInputs(); writeUrl(); renderResults();
 });
 document.getElementById('copy').addEventListener('click', async () => {
   const b = document.getElementById('copy');
@@ -454,7 +441,7 @@ document.getElementById('copy').addEventListener('click', async () => {
   setTimeout(() => { b.textContent = 'Copy link'; }, 1400);
 });
 
-// ── Embed support: tell an iframe host how tall we are ────────────────────────
+// ── Embed support ─────────────────────────────────────────────────────────────
 function postHeight(){
   const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
   const msg = {src: location.href, context: 'iframe.resize', height: h};
@@ -464,10 +451,9 @@ function postHeight(){
 window.addEventListener('load', postHeight);
 window.addEventListener('resize', postHeight);
 
-readUrl();
 renderInputs();
+writeUrl();
 renderResults();
-})();
 </script>
 </body>
 </html>
