@@ -53,6 +53,8 @@ export const BRRRR_DEFAULTS = {
     targetCashLeft: 0,
     targetCashFlow: 150,
     targetYield: 0.07,
+    resaleCostPct: 0.08, // RESALE_COST_PCT
+    targetFlipProfit: 20000, // MIN_FLIP_PROFIT_B
 };
 /** Every numeric field. Used by the forms and URL (de)serialisation. */
 export const NUMERIC_KEYS = [
@@ -63,11 +65,12 @@ export const NUMERIC_KEYS = [
     "taxesAnnual", "insuranceAnnual", "hoaMonthly",
     "refiLtv", "refiRate", "refiAmortYears", "minDscr", "refiClosingPct", "refiClosingFixed", "reserveMonths",
     "customLoan", "targetCashLeft", "targetCashFlow", "targetYield",
+    "resaleCostPct", "targetFlipProfit",
 ];
 /** Fractions in BrrrrInputs that forms and URLs show as whole percents. */
 export const PERCENT_KEYS = new Set([
     "contingencyPct", "appraisalCushionPct", "vacancyPct", "maintenancePct", "capexPct", "mgmtPct",
-    "refiLtv", "refiRate", "refiClosingPct", "targetYield",
+    "refiLtv", "refiRate", "refiClosingPct", "targetYield", "resaleCostPct",
 ]);
 export const LOAN_MODES = ["lender", "safe", "custom", "none"];
 export function monthlyPayment(principal, annualRate, years) {
@@ -202,6 +205,32 @@ export function computeBrrrr(raw) {
         maoRefi, maoYield, mao, priceVsMao, conventionalCashIn,
     };
 }
+export function computeFlip(raw) {
+    const i = sanitize(raw);
+    const rehabTotal = i.rehabCost * (1 + i.contingencyPct);
+    const holdingCosts = i.holdMonths * i.monthlyHoldingCost;
+    const allInCost = i.purchasePrice + i.closingCosts + rehabTotal + holdingCosts;
+    const fixed = i.closingCosts + rehabTotal + holdingCosts; // everything except the price
+    const net = (sale) => sale * (1 - i.resaleCostPct);
+    const salePrice = i.arv;
+    const sellingCosts = salePrice * i.resaleCostPct;
+    const profit = net(salePrice) - allInCost;
+    const cushionedSalePrice = Math.max(0, i.arv * (1 - i.appraisalCushionPct));
+    const cushionedProfit = net(cushionedSalePrice) - allInCost;
+    const breakEvenSalePrice = i.resaleCostPct < 1 ? allInCost / (1 - i.resaleCostPct) : 0;
+    const maoRaw = net(salePrice) - fixed - i.targetFlipProfit;
+    const maoCushionedRaw = net(cushionedSalePrice) - fixed - i.targetFlipProfit;
+    return {
+        allInCost, salePrice, sellingCosts, profit,
+        margin: salePrice > 0 ? profit / salePrice : null,
+        roi: allInCost > 0 ? profit / allInCost : null,
+        annualizedRoi: allInCost > 0 && i.holdMonths > 0 ? (profit / allInCost) * (12 / i.holdMonths) : null,
+        cushionedSalePrice, cushionedProfit, breakEvenSalePrice,
+        mao: Math.max(0, maoRaw),
+        maoCushioned: Math.max(0, maoCushionedRaw),
+        priceVsMao: i.purchasePrice - maoRaw,
+    };
+}
 /** The same deal under each loan choice, for a side-by-side table. */
 export function loanOptions(inputs) {
     const base = sanitize(inputs);
@@ -270,7 +299,17 @@ export function verdict(inputs, r) {
         : over <= 10000
             ? { tone: "warn", text: `Your price of ${money(i.purchasePrice)} is ${money(over)} over the ${money(r.mao)} max offer to ${basis}. Negotiable range.` }
             : { tone: "bad", text: `Your price of ${money(i.purchasePrice)} is ${money(over)} over the ${money(r.mao)} max offer to ${basis}.` };
-    return { rental, leverage, brrrr, price };
+    // Flip, compared with holding.
+    const f = computeFlip(i);
+    const flipText = `Flipped at ${money(f.salePrice)} it clears ${money(f.profit)} (${pct(f.margin ?? 0, 0)} margin, ${pct(f.annualizedRoi ?? 0, 0)} annualized on cash)`;
+    const flip = f.profit >= i.targetFlipProfit && f.cushionedProfit >= 0
+        ? { tone: "good", text: `${flipText}, and still ${money(f.cushionedProfit)} if it only sells at ${money(f.cushionedSalePrice)}.` }
+        : f.profit >= i.targetFlipProfit
+            ? { tone: "warn", text: `${flipText}, but a sale at ${money(f.cushionedSalePrice)} loses ${money(-f.cushionedProfit)}. Thin for the risk.` }
+            : f.profit > 0
+                ? { tone: "warn", text: `${flipText}, under your ${money(i.targetFlipProfit)} target. Break-even sale is ${money(f.breakEvenSalePrice)}.` }
+                : { tone: "bad", text: `Flipping loses ${money(-f.profit)} even at full ARV. Break-even sale is ${money(f.breakEvenSalePrice)}.` };
+    return { rental, leverage, brrrr, price, flip };
 }
 // ── URL state ────────────────────────────────────────────────────────────────
 // Short query keys so a saved link stays readable; only non-default values are
@@ -304,6 +343,8 @@ export const QUERY_KEYS = {
     targetCashLeft: "maxleft",
     targetCashFlow: "cfmin",
     targetYield: "yield",
+    resaleCostPct: "resale",
+    targetFlipProfit: "profit",
 };
 export const MODE_QUERY_KEY = "mode";
 function one(q, k) {

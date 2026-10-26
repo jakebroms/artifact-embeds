@@ -148,7 +148,7 @@ tr.strong td:first-child{color:var(--ink);font-size:12.5px}
 <script type="module">
 import {
   BRRRR_DEFAULTS, NUMERIC_KEYS, PERCENT_KEYS, LOAN_MODES,
-  computeBrrrr, loanOptions, stressTest, verdict, inputsFromQuery, queryFromInputs,
+  computeBrrrr, computeFlip, loanOptions, stressTest, verdict, inputsFromQuery, queryFromInputs,
 } from './brrrr-math.js';
 
 // ── Form definition ───────────────────────────────────────────────────────────
@@ -191,6 +191,10 @@ const SECTIONS = [
     {k:'targetCashLeft', label:'Max cash left in', unit:'$', step:1000, hint:'For the refi max offer. $0 is a full BRRRR; 25–70% recovery is a win at today’s rates.'},
     {k:'targetCashFlow', label:'Min cash flow / month', unit:'$', step:25, hint:'Sizes the cash-flow-safe loan. $100–300 per door is the usual floor.'},
     {k:'targetYield', label:'Target yield if held in cash', unit:'%', step:0.5, hint:'Sets the max offer when you take no loan.'},
+  ]},
+  {title:'Flip instead?', fields:[
+    {k:'targetFlipProfit', label:'Target flip profit', unit:'$', step:5000, hint:'Sets the flip max offer. Flip gains are ordinary income, not capital gains.'},
+    {k:'resaleCostPct', label:'Selling costs', unit:'%', step:0.5, hint:'Agent commission, NY transfer tax, concessions. 7–9% is typical.'},
   ]},
 ];
 const MODE_LABELS = {lender:'Lender max', safe:'Cash-flow safe', custom:'Custom loan', none:'No loan'};
@@ -280,8 +284,10 @@ function vline(v){ return `<div class="v ${v.tone}"><i></i><div>${esc(v.text)}</
 
 function renderResults(){
   const i = fromForm(form);
-  const r = computeBrrrr(i), t = tones(i, r), v = verdict(i, r);
+  const r = computeBrrrr(i), t = tones(i, r), v = verdict(i, r), f = computeFlip(i);
   const opts = loanOptions(i), stress = stressTest(i);
+  const ft = f.profit >= i.targetFlipProfit && f.cushionedProfit >= 0 ? 'good' : f.profit > 0 ? 'warn' : 'bad';
+  const fp = f.priceVsMao <= 0.5 ? 'good' : f.priceVsMao <= 10000 ? 'warn' : 'bad';
   const over = r.priceVsMao > 0.5, under = r.priceVsMao < -0.5;
   const usingRefi = r.refiLoan > 0;
   const priceMsg = over ? `${money(r.priceVsMao)} above the max offer` : under ? `${money(-r.priceVsMao)} below the max offer` : 'right at the max offer';
@@ -332,6 +338,27 @@ function renderResults(){
         </tbody>
       </table></div>
       <div class="note ${t.spread}" style="${t.spread==='good'?'background:var(--good-bg);border-color:var(--good-line);color:#1f4d33':t.spread==='warn'?'':'background:var(--bad-bg);border-color:var(--bad-line);color:#6b1f1f'}">${esc(v.leverage.text)}</div>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <div>
+          <h3 style="margin-bottom:4px">Flip instead? <small>same purchase, rehab and hold, then sell</small></h3>
+          <div class="big num ${ft}">${money(f.profit)}</div>
+          <div class="sub">profit if it sells at your ${money(f.salePrice)} ARV, after ${pct(i.resaleCostPct,0)} selling costs. ${money(f.cushionedProfit)} if it only brings ${money(f.cushionedSalePrice)}.</div>
+        </div>
+        <span class="badge ${fp}">Flip max offer ${money(f.mao)} · you're ${f.priceVsMao > 0.5 ? money(f.priceVsMao) + ' over' : f.priceVsMao < -0.5 ? money(-f.priceVsMao) + ' under' : 'at it'}</span>
+      </div>
+      <div class="verdicts">${vline(v.flip)}</div>
+      <div class="tiles">
+        ${tile('Margin', pct(f.margin), 'profit ÷ sale price; 10%+ is healthy', f.margin == null ? 'neutral' : f.margin >= 0.1 ? 'good' : f.margin >= 0.05 ? 'warn' : 'bad')}
+        ${tile('Return on cash', pct(f.roi), `${money(f.profit)} on ${money(f.allInCost)} in ${i.holdMonths} months`, ft)}
+        ${tile('Annualized', pct(f.annualizedRoi), 'vs. ' + pct(r.unleveredYield) + ' a year holding it', f.annualizedRoi == null ? 'neutral' : f.annualizedRoi >= 0.2 ? 'good' : f.annualizedRoi >= 0.1 ? 'warn' : 'bad')}
+        ${tile('Break-even sale', money(f.breakEvenSalePrice), 'the price where profit is zero', f.breakEvenSalePrice <= f.cushionedSalePrice ? 'good' : f.breakEvenSalePrice <= f.salePrice ? 'warn' : 'bad')}
+        ${tile('Max offer, full ARV', money(f.mao), `clears ${money(i.targetFlipProfit)} at ${money(f.salePrice)}`)}
+        ${tile('Max offer, cushioned', money(f.maoCushioned), `clears ${money(i.targetFlipProfit)} at ${money(f.cushionedSalePrice)}`)}
+      </div>
+      <div class="note quiet">Holding at ${pct(r.unleveredYield)} a year keeps the house and the equity; flipping takes ${money(f.profit)} now, taxed as ordinary income, and you start over. The deal bot grades a flip B at ${money(20000)} and A at ${money(40000)}.</div>
     </div>
 
     <div class="card">
